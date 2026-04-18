@@ -43,7 +43,7 @@ variables:
 
 test:unit:
   stage: test
-  image: golang:1.22-alpine
+  image: golang:1.23-alpine
   <<: 
     - *go-cache
     - *rules-always
