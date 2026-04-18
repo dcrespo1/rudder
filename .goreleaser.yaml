@@ -1,9 +1,18 @@
+version: 2
 project_name: rudder
 
+# ─── Pre-build hooks ──────────────────────────────────────────────────────────
+# Completions are generated here so they exist when goreleaser packages archives
+# and nfpm packages. They're built from the host-platform binary via `go run`.
 before:
   hooks:
     - go mod tidy
+    - mkdir -p completions
+    - go run ./cmd/rudder completion bash > completions/rudder.bash
+    - go run ./cmd/rudder completion zsh > completions/rudder.zsh
+    - go run ./cmd/rudder completion fish > completions/rudder.fish
 
+# ─── Builds ───────────────────────────────────────────────────────────────────
 builds:
   - id: rudder
     main: ./cmd/rudder
@@ -23,37 +32,170 @@ builds:
     ignore:
       - goos: windows
         goarch: arm64
+    mod_timestamp: "{{ .CommitTimestamp }}"
 
+# ─── Archives ─────────────────────────────────────────────────────────────────
 archives:
   - id: rudder
     builds: [rudder]
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [zip]
     files:
       - LICENSE
-      - README.md
+      - docs/**
       - completions/*
 
+# ─── Linux/macOS packages (deb, rpm, apk) ────────────────────────────────────
+# Produces installable packages included in every release.
+# For a proper apt/yum repo (so users can `apt install rudder`), publish these
+# to Packagecloud.io or a self-hosted Aptly/Pulp instance after release.
+nfpms:
+  - id: packages
+    package_name: rudder
+    vendor: dcresp0
+    homepage: https://gitlab.com/dcresp0/rudder
+    maintainer: dcresp0
+    description: Multi-cluster kubectl wrapper — manage kubeconfigs and kubectl across environments
+    license: MIT
+    formats:
+      - deb    # Debian, Ubuntu
+      - rpm    # Fedora, RHEL, CentOS
+      - apk    # Alpine
+    bindir: /usr/local/bin
+    contents:
+      - src: completions/rudder.bash
+        dst: /etc/bash_completion.d/rudder
+        file_info:
+          mode: 0644
+      - src: completions/rudder.zsh
+        dst: /usr/share/zsh/vendor-completions/_rudder
+        file_info:
+          mode: 0644
+      - src: completions/rudder.fish
+        dst: /usr/share/fish/completions/rudder.fish
+        file_info:
+          mode: 0644
+
+# ─── Homebrew tap ─────────────────────────────────────────────────────────────
+# Requires: HOMEBREW_TAP_TOKEN CI variable with write access to homebrew-rudder repo.
+# skip_upload: auto → does NOT push formula on pre-release tags (alpha/beta/rc).
+# Create the tap repo at gitlab.com/dcresp0/homebrew-rudder before first release.
+brews:
+  - name: rudder
+    ids: [rudder]
+    repository:
+      owner: dcresp0
+      name: homebrew-rudder
+      branch: main
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    homepage: https://gitlab.com/dcresp0/rudder
+    description: Multi-cluster kubectl wrapper
+    license: MIT
+    install: bin.install "rudder"
+    test: |
+      system "#{bin}/rudder", "version", "--short"
+    skip_upload: auto
+
+# ─── Scoop bucket (Windows) ───────────────────────────────────────────────────
+# Requires: SCOOP_BUCKET_TOKEN CI variable.
+# Create the bucket repo at gitlab.com/dcresp0/scoop-rudder before first release.
+scoops:
+  - ids: [rudder]
+    repository:
+      owner: dcresp0
+      name: scoop-rudder
+      branch: main
+      token: "{{ .Env.SCOOP_BUCKET_TOKEN }}"
+    homepage: https://gitlab.com/dcresp0/rudder
+    description: Multi-cluster kubectl wrapper
+    license: MIT
+    skip_upload: auto
+
+# ─── Checksums ────────────────────────────────────────────────────────────────
 checksum:
   name_template: "checksums.txt"
+  algorithm: sha256
 
+# ─── SBOMs ────────────────────────────────────────────────────────────────────
+# Software Bill of Materials — lists every dependency and version baked into
+# each release artifact. Useful for supply chain audits and CVE tracking.
+sboms:
+  - artifacts: archive
+  - artifacts: package
+
+# ─── Signing ──────────────────────────────────────────────────────────────────
+# Cosign keyless signing using GitLab OIDC — no long-lived private key required.
+# The signature is recorded in the public Rekor transparency log.
+# Requires: COSIGN_EXPERIMENTAL=1 and the cosign binary in the release image.
+# To verify: cosign verify-blob --certificate-identity-regexp=".*" \
+#            --certificate-oidc-issuer="https://gitlab.com" <file>
+signs:
+  - cmd: cosign
+    env:
+      - COSIGN_EXPERIMENTAL=1
+    args:
+      - sign-blob
+      - --yes
+      - "--output-certificate=${certificate}"
+      - "--output-signature=${signature}"
+      - "${artifact}"
+    artifacts: checksum
+    output: true
+
+# ─── Changelog ────────────────────────────────────────────────────────────────
 changelog:
   sort: asc
   use: conventional-commits
+  abbrev: 7
   groups:
-    - title: Features
+    - title: "Features"
       regexp: "^feat"
       order: 0
-    - title: Bug Fixes
+    - title: "Bug Fixes"
       regexp: "^fix"
       order: 1
-    - title: Performance
+    - title: "Performance"
       regexp: "^perf"
       order: 2
-    - title: Other
+    - title: "Security"
+      regexp: "^(sec|security)"
+      order: 3
+    - title: "Other"
       order: 999
+  filters:
+    exclude:
+      - "^docs"
+      - "^ci"
+      - "^chore"
+      - "^test"
+      - "merge conflict"
+      - "Merge branch"
+      - "Merge pull request"
 
+# ─── GitLab release ───────────────────────────────────────────────────────────
+# prerelease: auto — tags containing alpha/beta/rc are marked as pre-release.
+# Pre-release tags also skip Homebrew and Scoop uploads (skip_upload: auto above).
 release:
-  draft: true
+  gitlab:
+    owner: dcresp0
+    name: rudder
+  prerelease: auto
+  draft: false
+  name_template: "{{ .ProjectName }} {{ .Tag }}"
+  footer: |
+    ## Installation
+
+    ```sh
+    # macOS / Linux
+    curl -fsSL https://gitlab.com/dcresp0/rudder/-/raw/main/scripts/install.sh | sh
+
+    # Homebrew
+    brew install dcresp0/rudder/rudder
+
+    # go install
+    go install gitlab.com/dcresp0/rudder/cmd/rudder@{{ .Tag }}
+    ```
+
+    **Full Changelog**: https://gitlab.com/dcresp0/rudder/-/compare/{{ .PreviousTag }}...{{ .Tag }}

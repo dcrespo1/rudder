@@ -1,19 +1,192 @@
-# You can override the included template(s) by including variable overrides
-# SAST customization: https://docs.gitlab.com/user/application_security/sast/#available-cicd-variables
-# Secret Detection customization: https://docs.gitlab.com/user/application_security/secret_detection/pipeline/configure/
-# Dependency Scanning customization: https://docs.gitlab.com/user/application_security/dependency_scanning/dependency_scanning_sbom/#customizing-analyzer-behavior
-# Container Scanning customization: https://docs.gitlab.com/user/application_security/container_scanning/#customizing-analyzer-behavior
-# Note that environment variables can be set in several places
-# See https://docs.gitlab.com/ci/variables/#cicd-variable-precedence
+# ─── Rudder CI/CD Pipeline ────────────────────────────────────────────────────
+#
+# Stages:
+#   test    — unit tests + linting (every push/MR/tag)
+#   scan    — SAST, secret detection, dependency scanning (every push/MR/tag)
+#   build   — snapshot build to validate goreleaser config (push/MR only)
+#   release — publish to GitLab + Homebrew + Scoop (semver tags only)
+#
+# Release channels (driven purely by tag format — no code changes needed):
+#   v1.2.3            → stable   — full release, Homebrew + Scoop updated
+#   v1.2.3-beta.1     → pre-release — GitLab release only, package managers skipped
+#   v1.2.3-alpha.1    → pre-release — same as beta
+#   v1.2.3-rc.1       → pre-release — same as beta
+#
+# Required CI/CD variables (Settings → CI/CD → Variables):
+#   HOMEBREW_TAP_TOKEN   — GitLab/GitHub PAT with write access to homebrew-rudder repo (masked)
+#   SCOOP_BUCKET_TOKEN   — PAT with write access to scoop-rudder repo (masked)
+#   COSIGN_PASSWORD      — empty string for keyless signing; omit if not using cosign (masked)
+#
+# Security scanning reports appear in the MR Security tab and project Security Dashboard.
+# MR approval blocking on findings requires GitLab Ultimate.
+# ──────────────────────────────────────────────────────────────────────────────
+
 stages:
-- test
-- secret-detection
-sast:
-  stage: test
+  - test
+  - scan
+  - build
+  - release
+
+# ─── GitLab security templates ────────────────────────────────────────────────
 include:
-- template: Security/SAST.gitlab-ci.yml
-- template: Security/Secret-Detection.gitlab-ci.yml
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Secret-Detection.gitlab-ci.yml
+  - template: Security/Dependency-Scanning.gitlab-ci.yml
+
+# ─── Global defaults ──────────────────────────────────────────────────────────
+default:
+  tags:
+    - docker  # assumes Docker-based GitLab runners; remove if using shell runners
+
 variables:
-  SECRET_DETECTION_ENABLED: 'true'
+  GOPATH: "$CI_PROJECT_DIR/.go-cache"
+  GOFLAGS: "-mod=readonly"
+  # Run only Go-relevant SAST analyzers — skip Ruby, JS, PHP, Java, etc.
+  SAST_EXCLUDED_ANALYZERS: "bandit,brakeman,eslint,flawfinder,nodejs-scan,phpcs-security-audit,pmd-apex,security-code-scan,sobelow,spotbugs"
+  SECRET_DETECTION_HISTORIC_SCAN: "false"
+
+# ─── Reusable anchors ─────────────────────────────────────────────────────────
+.go-cache: &go-cache
+  cache:
+    key: "$CI_PROJECT_ID-gomod-$CI_COMMIT_REF_SLUG"
+    paths:
+      - .go-cache/pkg/mod
+    policy: pull-push
+
+.rules-always: &rules-always
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+/
+
+.rules-no-tag: &rules-no-tag
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# ─── test stage ───────────────────────────────────────────────────────────────
+
+test:unit:
+  stage: test
+  image: golang:1.22-alpine
+  <<: *go-cache
+  before_script:
+    - apk add --no-cache git
+  script:
+    - go test ./... -timeout 60s -race -coverprofile=coverage.out
+    - go tool cover -func=coverage.out | tail -1
+  coverage: '/total:\s+\(statements\)\s+(\d+\.\d+)%/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.out
+    expire_in: 1 week
+  <<: *rules-always
+
+test:lint:
+  stage: test
+  image: golangci/golangci-lint:latest
+  <<: *go-cache
+  script:
+    - golangci-lint run ./... --timeout 5m
+  <<: *rules-always
+
+# ─── scan stage ───────────────────────────────────────────────────────────────
+
+# gosec: Go-specific SAST — command injection, SQL injection, weak crypto, path traversal
+gosec-sast:
+  stage: scan
+  variables:
+    GOPATH: "$CI_PROJECT_DIR/.go-cache"
+  <<: *rules-always
+
+# semgrep: language-agnostic SAST — OWASP Top 10 patterns, logic bugs
+semgrep-sast:
+  stage: scan
+  <<: *rules-always
+
+# Secret detection: API keys, tokens, private certs in code and git history.
+# Full history scan on default branch; incremental on MRs.
 secret_detection:
-  stage: secret-detection
+  stage: scan
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      variables:
+        SECRET_DETECTION_HISTORIC_SCAN: "false"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      variables:
+        SECRET_DETECTION_HISTORIC_SCAN: "true"
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+/
+      variables:
+        SECRET_DETECTION_HISTORIC_SCAN: "false"
+
+# Dependency scanning: go.mod/go.sum checked against OSV + NVD for known CVEs
+dependency_scanning:
+  stage: scan
+  <<: *rules-always
+
+# ─── build stage ──────────────────────────────────────────────────────────────
+# Snapshot build validates the full goreleaser config (hooks, archives, nfpms)
+# without publishing anything. Artifacts are kept for 3 days for manual download.
+
+build:snapshot:
+  stage: build
+  image: goreleaser/goreleaser:latest
+  <<: *go-cache
+  before_script:
+    - apk add --no-cache git
+  script:
+    - goreleaser release --snapshot --clean
+  artifacts:
+    name: "rudder-snapshot-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - dist/
+    expire_in: 3 days
+    expose_as: "Snapshot binaries"
+  <<: *rules-no-tag
+
+# ─── release stage ────────────────────────────────────────────────────────────
+# Triggered only on semver tags. GoReleaser's `prerelease: auto` setting handles
+# the stable vs pre-release distinction:
+#   - v1.2.3           → stable release, Homebrew + Scoop taps updated
+#   - v1.2.3-beta.1    → pre-release on GitLab only, taps skipped (skip_upload: auto)
+#
+# The release job uses two separate environment mappings so GitLab tracks
+# production vs pre-release deployments separately.
+
+.release-base: &release-base
+  stage: release
+  image: goreleaser/goreleaser:latest
+  <<: *go-cache
+  before_script:
+    - apk add --no-cache git cosign
+  script:
+    - goreleaser release --clean
+  variables:
+    GITLAB_TOKEN: $CI_JOB_TOKEN
+    # Token with write access to gitlab.com/dcresp0/homebrew-rudder
+    # Set in Settings → CI/CD → Variables as masked + protected
+    HOMEBREW_TAP_TOKEN: $HOMEBREW_TAP_TOKEN
+    # Token with write access to gitlab.com/dcresp0/scoop-rudder
+    SCOOP_BUCKET_TOKEN: $SCOOP_BUCKET_TOKEN
+    # Cosign keyless signing via GitLab OIDC — no private key stored in CI
+    COSIGN_EXPERIMENTAL: "1"
+
+release:stable:
+  <<: *release-base
+  rules:
+    # Stable semver only: v1.2.3 — no pre-release suffix
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$(?!.*(alpha|beta|rc))/
+  environment:
+    name: production
+    url: https://gitlab.com/dcresp0/rudder/-/releases/$CI_COMMIT_TAG
+
+release:prerelease:
+  <<: *release-base
+  rules:
+    # Pre-release semver: v1.2.3-alpha.1, v1.2.3-beta.2, v1.2.3-rc.1
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+-(alpha|beta|rc)\.\d+$/
+  environment:
+    name: pre-release
+    url: https://gitlab.com/dcresp0/rudder/-/releases/$CI_COMMIT_TAG
