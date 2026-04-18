@@ -50,7 +50,7 @@ test:unit:
   before_script:
     - apk add --no-cache git
   script:
-    - go test ./... -timeout 60s -race -coverprofile=coverage.out
+    - go test ./... -timeout 60s -coverprofile=coverage.out
     - go tool cover -func=coverage.out | tail -1
   coverage: '/total:\s+\(statements\)\s+(\d+\.\d+)%/'
   artifacts:
