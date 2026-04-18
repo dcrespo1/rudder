@@ -49,15 +49,17 @@ test:unit:
     - *rules-always
   before_script:
     - apk add --no-cache git
+    - go install github.com/boumenot/gocover-cobertura@latest
   script:
     - go test ./... -timeout 60s -coverprofile=coverage.out
     - go tool cover -func=coverage.out | tail -1
+    - gocover-cobertura < coverage.out > coverage.xml
   coverage: '/total:\s+\(statements\)\s+(\d+\.\d+)%/'
   artifacts:
     reports:
       coverage_report:
         coverage_format: cobertura
-        path: coverage.out
+        path: coverage.xml
     expire_in: 1 week
 test:lint:
   stage: test
