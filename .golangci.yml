@@ -1,0 +1,47 @@
+version: "2"
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - staticcheck
+    - unused
+    - gosec
+    - misspell
+    - unconvert
+    - unparam
+    - bodyclose
+    - noctx
+
+  disable:
+    - exhaustive  # too noisy for Status iota
+
+linters-settings:
+  gosec:
+    excludes:
+      - G402  # TLS InsecureSkipVerify — used intentionally in kubeconfig handling
+
+  errcheck:
+    exclude-functions:
+      - (io.Writer).Write
+      - fmt.Fprint
+      - fmt.Fprintln
+      - fmt.Fprintf
+
+  staticcheck:
+    checks: ["all", "-SA1019"]  # -SA1019: allow deprecated usage warnings
+
+issues:
+  exclude-rules:
+    # Test files: relax errcheck and gosec
+    - path: "_test\\.go"
+      linters:
+        - errcheck
+        - gosec
+        - unparam
+
+    # ui package: TLS skip verify is intentional for test kubeconfigs
+    - path: "internal/cluster/ping\\.go"
+      linters:
+        - gosec
+      text: "G402"

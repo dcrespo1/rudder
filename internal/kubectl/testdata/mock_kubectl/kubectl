@@ -1,0 +1,9 @@
+#!/bin/sh
+# Mock kubectl — writes all received arguments to $MOCK_KUBECTL_ARGS_FILE if set,
+# then exits with $MOCK_KUBECTL_EXIT_CODE (default 0).
+
+if [ -n "$MOCK_KUBECTL_ARGS_FILE" ]; then
+    echo "$@" > "$MOCK_KUBECTL_ARGS_FILE"
+fi
+
+exit "${MOCK_KUBECTL_EXIT_CODE:-0}"

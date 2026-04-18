@@ -1,0 +1,40 @@
+# Rudder configuration — copy to ~/.rudder/config.yaml and edit as needed.
+# Schema version — do not change.
+version: "1"
+
+# Optional: absolute path to the kubectl binary.
+# If omitted, Rudder resolves kubectl from RUDDER_KUBECTL env var, then PATH.
+kubectl_path: ""
+
+# Optional: default namespace applied to all exec commands.
+# Can be overridden per-environment with the `namespace` field below.
+default_namespace: ""
+
+environments:
+  # Local development cluster running in kind.
+  - name: dev
+    description: "Local dev cluster (kind)"
+    # Kubeconfig path. Supports ~ expansion and $ENV_VAR substitution.
+    kubeconfig: ~/.kube/kind-dev.yaml
+    # Optional: specific context within the kubeconfig.
+    # If omitted, the kubeconfig's current-context is used.
+    context: kind-dev
+    namespace: default
+    tags: [local, kind]
+
+  # Azure GovCloud staging AKS cluster.
+  - name: staging
+    description: "Azure GovCloud staging AKS"
+    kubeconfig: ~/.kube/aks-staging.yaml
+    context: aks-staging-admin
+    namespace: platform
+    tags: [azure, aks, govcloud]
+
+  # Production AKS cluster (GCC High).
+  # Server URL points to *.azmk8s.us — no special Rudder handling needed.
+  - name: prod
+    description: "Production AKS (GCC High)"
+    kubeconfig: ~/.kube/aks-prod.yaml
+    context: aks-prod-admin
+    namespace: platform
+    tags: [azure, aks, govcloud, prod]

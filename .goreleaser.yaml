@@ -1,0 +1,59 @@
+project_name: rudder
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: rudder
+    main: ./cmd/rudder
+    binary: rudder
+    ldflags:
+      - -s -w
+      - -X gitlab.com/dcresp0/rudder/pkg/rudder.Version={{.Version}}
+      - -X gitlab.com/dcresp0/rudder/pkg/rudder.Commit={{.Commit}}
+      - -X gitlab.com/dcresp0/rudder/pkg/rudder.BuildDate={{.Date}}
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
+
+archives:
+  - id: rudder
+    builds: [rudder]
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - LICENSE
+      - README.md
+      - completions/*
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  use: conventional-commits
+  groups:
+    - title: Features
+      regexp: "^feat"
+      order: 0
+    - title: Bug Fixes
+      regexp: "^fix"
+      order: 1
+    - title: Performance
+      regexp: "^perf"
+      order: 2
+    - title: Other
+      order: 999
+
+release:
+  draft: true
