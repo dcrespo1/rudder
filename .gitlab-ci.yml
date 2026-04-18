@@ -46,7 +46,7 @@ test:unit:
   image: golang:1.22-alpine
   <<: 
     - *go-cache
-    - *rules-allways
+    - *rules-always
   before_script:
     - apk add --no-cache git
   script:
