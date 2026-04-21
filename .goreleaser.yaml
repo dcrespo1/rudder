@@ -115,19 +115,18 @@ checksum:
 #     --certificate-identity-regexp="https://github.com/dcrespo1/rudder/*" \
 #     --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
 #     <file>
-signs:
-  - cmd: cosign
-    env:
-      - COSIGN_EXPERIMENTAL=1
-    args:
-      - sign-blob
-      - --yes
-      - "--output-certificate=${certificate}"
-      - "--output-signature=${signature}"
-      - "${artifact}"
-    artifacts: checksum
-    output: true
-    if: "{{not .IsSnapshot}}"
+# signs:
+#   - cmd: cosign
+#     env:
+#       - COSIGN_EXPERIMENTAL=1
+#     args:
+#       - sign-blob
+#       - --yes
+#       - "--output-certificate=${certificate}"
+#       - "--output-signature=${signature}"
+#       - "${artifact}"
+#     artifacts: checksum
+#     output: true
 
 # ─── Changelog ────────────────────────────────────────────────────────────────
 changelog:
