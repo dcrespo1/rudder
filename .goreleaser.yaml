@@ -102,9 +102,9 @@ checksum:
 
 # ─── SBOMs ────────────────────────────────────────────────────────────────────
 # Software Bill of Materials — one per archive artifact.
-sboms:
-  - id: archive-sbom
-    artifacts: archive
+# sboms:
+#   - id: archive-sbom
+#     artifacts: archive
 
 # ─── Signing ──────────────────────────────────────────────────────────────────
 # Cosign keyless signing using GitHub OIDC — no long-lived private key required.
