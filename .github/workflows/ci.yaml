@@ -86,6 +86,9 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
       - uses: goreleaser/goreleaser-action@v7
         with:
           version: "~> v2"
