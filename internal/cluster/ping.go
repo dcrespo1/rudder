@@ -10,7 +10,7 @@ import (
 
 	"k8s.io/client-go/tools/clientcmd"
 
-	"gitlab.com/dcresp0/rudder/internal/config"
+	"github.com/dcrespo1/rudder/internal/config"
 )
 
 // Status represents the reachability state of a cluster.
@@ -54,7 +54,7 @@ func Ping(ctx context.Context, kubeconfigPath, contextName string) Status {
 	if err != nil {
 		return StatusUnreachable
 	}
-	resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck
 
 	if resp.StatusCode == http.StatusOK {
 		return StatusReachable
