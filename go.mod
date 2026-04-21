@@ -1,6 +1,6 @@
 module github.com/dcrespo1/rudder
 
-go 1.23.0
+go 1.23.5
 
 require (
 	github.com/charmbracelet/bubbles v0.20.0
