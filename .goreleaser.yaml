@@ -8,9 +8,12 @@ before:
   hooks:
     - go mod tidy
     - mkdir -p completions
-    - go run ./cmd/rudder completion bash > completions/rudder.bash
-    - go run ./cmd/rudder completion zsh > completions/rudder.zsh
-    - go run ./cmd/rudder completion fish > completions/rudder.fish
+    - sh -c "go run ./cmd/rudder completion bash > completions/rudder.bash"
+    - sh -c "go run ./cmd/rudder completion zsh > completions/rudder.zsh"
+    - sh -c "go run ./cmd/rudder completion fish > completions/rudder.fish"
+    - test -f completions/rudder.bash
+    - test -f completions/rudder.zsh
+    - test -f completions/rudder.fish
 
 # ─── Builds ───────────────────────────────────────────────────────────────────
 builds:
@@ -80,17 +83,17 @@ nfpms:
 # ─── Scoop bucket (Windows) ───────────────────────────────────────────────────
 # Requires: SCOOP_BUCKET_TOKEN secret with write access to scoop-rudder repo.
 # Create the bucket repo at github.com/dcrespo1/scoop-rudder before first release.
-scoops:
-  - ids: [rudder]
-    repository:
-      owner: dcrespo1
-      name: scoop-rudder
-      branch: main
-      token: "{{ .Env.SCOOP_BUCKET_TOKEN }}"
-    homepage: https://github.com/dcrespo1/rudder
-    description: Multi-cluster kubectl wrapper
-    license: MIT
-    skip_upload: auto
+# scoops:
+#   - ids: [rudder]
+#     repository:
+#       owner: dcrespo1
+#       name: scoop-rudder
+#       branch: main
+#       token: "{{ .Env.SCOOP_BUCKET_TOKEN }}"
+#     homepage: https://github.com/dcrespo1/rudder
+#     description: Multi-cluster kubectl wrapper
+#     license: MIT
+#     skip_upload: auto
 
 # ─── Checksums ────────────────────────────────────────────────────────────────
 checksum:
