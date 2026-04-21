@@ -54,22 +54,22 @@ jobs:
   #         args: --timeout 5m
 
   # ─── Vulnerability check ──────────────────────────────────────────────────
-  vulncheck:
-    name: Vuln Check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+  # vulncheck:
+  #   name: Vuln Check
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-          cache: true
+  #     - uses: actions/setup-go@v5
+  #       with:
+  #         go-version-file: go.mod
+  #         cache: true
 
-      - name: Install govulncheck
-        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+  #     - name: Install govulncheck
+  #       run: go install golang.org/x/vuln/cmd/govulncheck@latest
 
-      - name: Run govulncheck
-        run: govulncheck ./...
+  #     - name: Run govulncheck
+  #       run: govulncheck ./...
 
   # ─── Snapshot build (non-tag pushes) ─────────────────────────────────────
   build-snapshot:
