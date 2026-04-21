@@ -37,7 +37,6 @@ builds:
 # ─── Archives ─────────────────────────────────────────────────────────────────
 archives:
   - id: rudder
-    builds: [rudder]
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
     format_overrides:
       - goos: windows
@@ -54,9 +53,9 @@ archives:
 nfpms:
   - id: packages
     package_name: rudder
-    vendor: dcresp0
+    vendor: dcrespo1
     homepage: https://github.com/dcrespo1/rudder
-    maintainer: dcresp0
+    maintainer: dcrespo1
     description: Multi-cluster kubectl wrapper — manage kubeconfigs and kubectl across environments
     license: MIT
     formats:
@@ -78,33 +77,13 @@ nfpms:
         file_info:
           mode: 0644
 
-# ─── Homebrew tap ─────────────────────────────────────────────────────────────
-# Requires: HOMEBREW_TAP_TOKEN CI variable with write access to homebrew-rudder repo.
-# skip_upload: auto → does NOT push formula on pre-release tags (alpha/beta/rc).
-# Create the tap repo at github.com/dcrespo1/homebrew-rudder before first release.
-brews:
-  - name: rudder
-    ids: [rudder]
-    repository:
-      owner: dcresp0
-      name: homebrew-rudder
-      branch: main
-      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
-    homepage: https://github.com/dcrespo1/rudder
-    description: Multi-cluster kubectl wrapper
-    license: MIT
-    install: bin.install "rudder"
-    test: |
-      system "#{bin}/rudder", "version", "--short"
-    skip_upload: auto
-
 # ─── Scoop bucket (Windows) ───────────────────────────────────────────────────
-# Requires: SCOOP_BUCKET_TOKEN CI variable.
+# Requires: SCOOP_BUCKET_TOKEN secret with write access to scoop-rudder repo.
 # Create the bucket repo at github.com/dcrespo1/scoop-rudder before first release.
 scoops:
   - ids: [rudder]
     repository:
-      owner: dcresp0
+      owner: dcrespo1
       name: scoop-rudder
       branch: main
       token: "{{ .Env.SCOOP_BUCKET_TOKEN }}"
@@ -119,18 +98,20 @@ checksum:
   algorithm: sha256
 
 # ─── SBOMs ────────────────────────────────────────────────────────────────────
-# Software Bill of Materials — lists every dependency and version baked into
-# each release artifact. Useful for supply chain audits and CVE tracking.
+# Software Bill of Materials — one per archive artifact.
 sboms:
-  - artifacts: archive
-  - artifacts: package
+  - id: archive-sbom
+    artifacts: archive
 
 # ─── Signing ──────────────────────────────────────────────────────────────────
-# Cosign keyless signing using GitLab OIDC — no long-lived private key required.
+# Cosign keyless signing using GitHub OIDC — no long-lived private key required.
 # The signature is recorded in the public Rekor transparency log.
-# Requires: COSIGN_EXPERIMENTAL=1 and the cosign binary in the release image.
-# To verify: cosign verify-blob --certificate-identity-regexp=".*" \
-#            --certificate-oidc-issuer="https://gitlab.com" <file>
+# Requires: id-token: write permission in the release workflow.
+# To verify a release:
+#   cosign verify-blob \
+#     --certificate-identity-regexp="https://github.com/dcrespo1/rudder/*" \
+#     --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
+#     <file>
 signs:
   - cmd: cosign
     env:
@@ -147,7 +128,7 @@ signs:
 # ─── Changelog ────────────────────────────────────────────────────────────────
 changelog:
   sort: asc
-  use: conventional-commits
+  use: github
   abbrev: 7
   groups:
     - title: "Features"
@@ -174,12 +155,12 @@ changelog:
       - "Merge branch"
       - "Merge pull request"
 
-# ─── GitLab release ───────────────────────────────────────────────────────────
+# ─── GitHub release ───────────────────────────────────────────────────────────
 # prerelease: auto — tags containing alpha/beta/rc are marked as pre-release.
 # Pre-release tags also skip Homebrew and Scoop uploads (skip_upload: auto above).
 release:
-  gitlab:
-    owner: dcresp0
+  github:
+    owner: dcrespo1
     name: rudder
   prerelease: auto
   draft: false
@@ -187,15 +168,14 @@ release:
   footer: |
     ## Installation
 
+    **go install**
     ```sh
-    # macOS / Linux
-    curl -fsSL https://github.com/dcrespo1/rudder/-/raw/main/scripts/install.sh | sh
-
-    # Homebrew
-    brew install dcresp0/rudder/rudder
-
-    # go install
     go install github.com/dcrespo1/rudder/cmd/rudder@{{ .Tag }}
     ```
 
-    **Full Changelog**: https://github.com/dcrespo1/rudder/-/compare/{{ .PreviousTag }}...{{ .Tag }}
+    **Direct download**
+    ```sh
+    curl -fsSL https://raw.githubusercontent.com/dcrespo1/rudder/main/scripts/install.sh | sh
+    ```
+
+    **Full Changelog**: https://github.com/dcrespo1/rudder/compare/{{ .PreviousTag }}...{{ .Tag }}
