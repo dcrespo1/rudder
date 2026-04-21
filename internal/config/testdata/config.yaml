@@ -1,0 +1,21 @@
+version: "1"
+kubectl_path: ""
+environments:
+  - name: dev
+    description: "Local dev cluster"
+    kubeconfig: /tmp/rudder-test-kube-dev.yaml
+    context: kind-dev
+    namespace: default
+    tags: [local, kind]
+  - name: staging
+    description: "Staging cluster"
+    kubeconfig: /tmp/rudder-test-kube-staging.yaml
+    context: aks-staging-admin
+    namespace: platform
+    tags: [azure, aks]
+  - name: prod
+    description: "Production cluster"
+    kubeconfig: /tmp/rudder-test-kube-prod.yaml
+    context: aks-prod-admin
+    namespace: platform
+    tags: [azure, aks, prod]

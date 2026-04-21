@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Config
+current-context: kind-dev
+clusters:
+  - name: kind-dev
+    cluster:
+      server: https://127.0.0.1:6443
+      insecure-skip-tls-verify: true
+  - name: kind-other
+    cluster:
+      server: https://127.0.0.1:6444
+      insecure-skip-tls-verify: true
+contexts:
+  - name: kind-dev
+    context:
+      cluster: kind-dev
+      user: kind-dev
+  - name: kind-other
+    context:
+      cluster: kind-other
+      user: kind-dev
+users:
+  - name: kind-dev
+    user:
+      token: fake-token
