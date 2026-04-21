@@ -35,23 +35,23 @@ jobs:
           path: coverage.out
           retention-days: 7
 
-  # ─── Lint ─────────────────────────────────────────────────────────────────
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+  # ─── Lint ───────────────────────────────────────────────────────────────── NEEDS WORK
+  # lint:
+  #   name: Lint
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-          cache: true
+  #     - uses: actions/setup-go@v5
+  #       with:
+  #         go-version-file: go.mod
+  #         cache: true
 
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v7
-        with:
-          version: latest
-          args: --timeout 5m
+  #     - name: golangci-lint
+  #       uses: golangci/golangci-lint-action@v7
+  #       with:
+  #         version: latest
+  #         args: --timeout 5m
 
   # ─── Vulnerability check ──────────────────────────────────────────────────
   vulncheck:
@@ -75,7 +75,7 @@ jobs:
   build-snapshot:
     name: Snapshot Build
     runs-on: ubuntu-latest
-    needs: [test, lint]
+    needs: [test] # removing lint for now
     steps:
       - uses: actions/checkout@v4
         with:

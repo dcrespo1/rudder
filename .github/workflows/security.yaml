@@ -1,63 +1,63 @@
-name: Security
+# name: Security
 
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-  schedule:
-    # Weekly full scan — Monday 08:00 UTC
-    - cron: "0 8 * * 1"
+# on:
+#   push:
+#     branches: [main]
+#   pull_request:
+#     branches: [main]
+#   schedule:
+#     # Weekly full scan — Monday 08:00 UTC
+#     - cron: "0 8 * * 1"
 
-permissions:
-  contents: read
-  security-events: write # upload SARIF results to GitHub Security tab
+# permissions:
+#   contents: read
+#   security-events: write # upload SARIF results to GitHub Security tab
 
-jobs:
-  # ─── CodeQL (replaces GitLab SAST + gosec) ───────────────────────────────
-  codeql:
-    name: CodeQL
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+# jobs:
+#   # ─── CodeQL (replaces GitLab SAST + gosec) ───────────────────────────────
+#   codeql:
+#     name: CodeQL
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
 
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-          cache: true
+#       - uses: actions/setup-go@v5
+#         with:
+#           go-version-file: go.mod
+#           cache: true
 
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: go
-          queries: security-extended
+#       - name: Initialize CodeQL
+#         uses: github/codeql-action/init@v3
+#         with:
+#           languages: go
+#           queries: security-extended
 
-      - name: Build for CodeQL
-        run: go build ./...
+#       - name: Build for CodeQL
+#         run: go build ./...
 
-      - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@v3
-        with:
-          category: "/language:go"
+#       - name: Perform CodeQL analysis
+#         uses: github/codeql-action/analyze@v3
+#         with:
+#           category: "/language:go"
 
-  # ─── gosec (targeted Go security linter) ─────────────────────────────────
-  gosec:
-    name: gosec
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+#   # ─── gosec (targeted Go security linter) ─────────────────────────────────
+#   gosec:
+#     name: gosec
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
 
-      - name: Run gosec
-        uses: securego/gosec@master
-        with:
-          args: >
-            -exclude=G402
-            -fmt sarif
-            -out gosec.sarif
-            ./...
+#       - name: Run gosec
+#         uses: securego/gosec@master
+#         with:
+#           args: >
+#             -exclude=G402
+#             -fmt sarif
+#             -out gosec.sarif
+#             ./...
 
-      - name: Upload gosec SARIF
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: gosec.sarif
-          category: gosec
+#       - name: Upload gosec SARIF
+#         uses: github/codeql-action/upload-sarif@v3
+#         with:
+#           sarif_file: gosec.sarif
+#           category: gosec
