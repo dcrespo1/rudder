@@ -44,7 +44,7 @@ variables:
 test:unit:
   stage: test
   image: golang:1.23-alpine
-  <<: 
+  <<:
     - *go-cache
     - *rules-always
   before_script:
@@ -64,7 +64,7 @@ test:unit:
 test:lint:
   stage: test
   image: golangci/golangci-lint:latest
-  <<: 
+  <<:
     - *go-cache
     - *rules-always
   script:
@@ -104,7 +104,7 @@ dependency_scanning:
 build:snapshot:
   stage: build
   image: goreleaser/goreleaser:latest
-  <<: 
+  <<:
     - *go-cache
     - *rules-no-tag
   before_script:
@@ -139,7 +139,7 @@ release:stable:
     - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
   environment:
     name: production
-    url: https://gitlab.com/dcresp0/rudder/-/releases/$CI_COMMIT_TAG
+    url: https://github.com/dcrespo1/rudder/-/releases/$CI_COMMIT_TAG
 
 release:prerelease:
   <<: *release-base
@@ -147,4 +147,4 @@ release:prerelease:
     - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+-(alpha|beta|rc)\.\d+$/
   environment:
     name: pre-release
-    url: https://gitlab.com/dcresp0/rudder/-/releases/$CI_COMMIT_TAG
+    url: https://github.com/dcrespo1/rudder/-/releases/$CI_COMMIT_TAG

@@ -1,4 +1,4 @@
-module gitlab.com/dcresp0/rudder
+module github.com/dcrespo1/rudder
 
 go 1.23.0
 
@@ -8,6 +8,7 @@ require (
 	github.com/charmbracelet/lipgloss v1.0.0
 	github.com/muesli/termenv v0.15.3-0.20240618155329-98d742f6907a
 	github.com/spf13/cobra v1.8.1
+	gitlab.com/dcresp0/rudder v0.0.0-20260421164635-8f439afa030f
 	golang.org/x/term v0.28.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/client-go v0.32.0

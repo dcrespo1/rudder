@@ -1,0 +1,43 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write # create GitHub releases + upload assets
+  id-token: write # cosign keyless signing via GitHub OIDC
+  packages: write # if publishing to GHCR in future
+
+jobs:
+  # ─── Release (stable + prerelease) ───────────────────────────────────────
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ contains(github.ref_name, '-') && 'pre-release' || 'production' }}
+      url: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          version: latest
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          SCOOP_BUCKET_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}
+          COSIGN_EXPERIMENTAL: "1"

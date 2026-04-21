@@ -1,6 +1,6 @@
 #!/bin/sh
 # Rudder installer — detects OS/arch, downloads the latest release, installs binary.
-# Usage: curl -fsSL https://gitlab.com/dcresp0/rudder/-/raw/main/scripts/install.sh | sh
+# Usage: curl -fsSL https://github.com/dcrespo1/rudder/-/raw/main/scripts/install.sh | sh
 
 set -e
 

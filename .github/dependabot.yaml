@@ -1,0 +1,35 @@
+version: 2
+
+updates:
+  # ─── Go modules ───────────────────────────────────────────────────────────
+  - package-ecosystem: gomod
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "08:00"
+    open-pull-requests-limit: 5
+    groups:
+      charmbracelet:
+        patterns:
+          - "github.com/charmbracelet/*"
+          - "github.com/muesli/*"
+      kubernetes:
+        patterns:
+          - "k8s.io/*"
+          - "sigs.k8s.io/*"
+    ignore:
+      # Pin major versions manually — breaking changes
+      - dependency-name: "github.com/spf13/cobra"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "github.com/charmbracelet/bubbletea"
+        update-types: ["version-update:semver-major"]
+
+  # ─── GitHub Actions ───────────────────────────────────────────────────────
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "08:00"
+    open-pull-requests-limit: 5

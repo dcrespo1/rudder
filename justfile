@@ -2,9 +2,9 @@ version := `git describe --tags --always --dirty 2>/dev/null || echo "0.0.1-dev"
 commit := `git rev-parse --short HEAD 2>/dev/null || echo "unknown"`
 build_date := `date -u +%Y-%m-%dT%H:%M:%SZ`
 
-ldflags := "-X gitlab.com/dcresp0/rudder/pkg/rudder.Version=" + version + \
-           " -X gitlab.com/dcresp0/rudder/pkg/rudder.Commit=" + commit + \
-           " -X gitlab.com/dcresp0/rudder/pkg/rudder.BuildDate=" + build_date
+ldflags := "-X github.com/dcrespo1/rudder/pkg/rudder.Version=" + version + \
+           " -X github.com/dcrespo1/rudder/pkg/rudder.Commit=" + commit + \
+           " -X github.com/dcrespo1/rudder/pkg/rudder.BuildDate=" + build_date
 
 # Default recipe — list all available recipes
 default:
