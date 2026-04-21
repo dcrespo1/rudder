@@ -9,8 +9,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"gitlab.com/dcresp0/rudder/internal/cluster"
-	"gitlab.com/dcresp0/rudder/internal/config"
+	"github.com/dcrespo1/rudder/internal/cluster"
+	"github.com/dcrespo1/rudder/internal/config"
 )
 
 // PingResultMsg carries an async ping result into the bubbletea model.

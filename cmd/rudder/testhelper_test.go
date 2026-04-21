@@ -8,7 +8,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"gitlab.com/dcresp0/rudder/internal/config"
+	"github.com/dcrespo1/rudder/internal/config"
 )
 
 // cmdResult holds the output of a test command execution.

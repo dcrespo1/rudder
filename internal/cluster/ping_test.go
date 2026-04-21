@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"gitlab.com/dcresp0/rudder/internal/config"
+	"github.com/dcrespo1/rudder/internal/config"
 )
 
 // makeKubeconfig writes a minimal kubeconfig pointing at the given server URL.

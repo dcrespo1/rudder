@@ -9,8 +9,8 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
 
-	"gitlab.com/dcresp0/rudder/internal/config"
-	"gitlab.com/dcresp0/rudder/internal/ui"
+	"github.com/dcrespo1/rudder/internal/config"
+	"github.com/dcrespo1/rudder/internal/ui"
 )
 
 func NewEnvsCmd(app *App) *cobra.Command {

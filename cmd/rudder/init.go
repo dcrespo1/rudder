@@ -10,9 +10,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"gitlab.com/dcresp0/rudder/internal/config"
-	"gitlab.com/dcresp0/rudder/internal/kubeconfig"
-	"gitlab.com/dcresp0/rudder/internal/ui"
+	"github.com/dcrespo1/rudder/internal/config"
+	"github.com/dcrespo1/rudder/internal/kubeconfig"
+	"github.com/dcrespo1/rudder/internal/ui"
 )
 
 func NewInitCmd(app *App) *cobra.Command {

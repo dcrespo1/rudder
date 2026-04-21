@@ -5,7 +5,7 @@ import (
 	"sync"
 	"testing"
 
-	"gitlab.com/dcresp0/rudder/internal/config"
+	"github.com/dcrespo1/rudder/internal/config"
 )
 
 func TestUse_Direct(t *testing.T) {

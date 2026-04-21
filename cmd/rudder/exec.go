@@ -8,9 +8,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"gitlab.com/dcresp0/rudder/internal/config"
-	"gitlab.com/dcresp0/rudder/internal/kubectl"
-	"gitlab.com/dcresp0/rudder/internal/ui"
+	"github.com/dcrespo1/rudder/internal/config"
+	"github.com/dcrespo1/rudder/internal/kubectl"
+	"github.com/dcrespo1/rudder/internal/ui"
 )
 
 func NewExecCmd(app *App) *cobra.Command {

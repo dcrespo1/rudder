@@ -8,8 +8,8 @@ import (
 	"os/exec"
 	"time"
 
-	"gitlab.com/dcresp0/rudder/internal/config"
-	"gitlab.com/dcresp0/rudder/internal/ui"
+	"github.com/dcrespo1/rudder/internal/config"
+	"github.com/dcrespo1/rudder/internal/ui"
 )
 
 // Run executes kubectl with the given kubeconfig and context injected.

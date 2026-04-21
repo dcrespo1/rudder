@@ -10,8 +10,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"gitlab.com/dcresp0/rudder/internal/config"
-	"gitlab.com/dcresp0/rudder/internal/ui"
+	"github.com/dcrespo1/rudder/internal/config"
+	"github.com/dcrespo1/rudder/internal/ui"
 )
 
 func NewConfigCmd(app *App) *cobra.Command {

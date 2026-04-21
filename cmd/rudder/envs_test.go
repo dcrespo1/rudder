@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitlab.com/dcresp0/rudder/internal/config"
+	"github.com/dcrespo1/rudder/internal/config"
 )
 
 func TestEnvs_Empty(t *testing.T) {

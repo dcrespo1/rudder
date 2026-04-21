@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/spf13/cobra"
 
-	rudder "gitlab.com/dcresp0/rudder/pkg/rudder"
+	rudder "github.com/dcrespo1/rudder/pkg/rudder"
 )
 
 func NewVersionCmd(app *App) *cobra.Command {

@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"gitlab.com/dcresp0/rudder/internal/config"
-	"gitlab.com/dcresp0/rudder/internal/ui"
+	"github.com/dcrespo1/rudder/internal/config"
+	"github.com/dcrespo1/rudder/internal/ui"
 )
 
 func mockKubectlPath(t *testing.T) string {
