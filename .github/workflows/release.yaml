@@ -19,7 +19,7 @@ jobs:
       name: ${{ contains(github.ref_name, '-') && 'pre-release' || 'production' }}
       url: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
